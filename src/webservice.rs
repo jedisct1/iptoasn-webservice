@@ -38,25 +38,29 @@ pub struct WebService;
 
 impl WebService {
     fn index(_: &mut Request) -> IronResult<Response> {
-        let response = Response::with((status::Ok,
-                                       Mime(TopLevel::Text,
-                                            SubLevel::Plain,
-                                            vec![(Attr::Charset, Value::Utf8)]),
-                                       Header(CacheControl(vec![CacheDirective::Public,
-                                                                CacheDirective::MaxAge(TTL)])),
-                                       "See https://iptoasn.com"));
-        Ok(response)
+        Ok(Response::with((status::Ok,
+                           Mime(TopLevel::Text,
+                                SubLevel::Plain,
+                                vec![(Attr::Charset, Value::Utf8)]),
+                           Header(CacheControl(vec![CacheDirective::Public,
+                                                    CacheDirective::MaxAge(TTL)])),
+                           "See https://iptoasn.com")))
     }
 
     fn ip_lookup(req: &mut Request) -> IronResult<Response> {
+        let mime_text = Mime(TopLevel::Text,
+                             SubLevel::Plain,
+                             vec![(Attr::Charset, Value::Utf8)]);
+        let mime_json = Mime(TopLevel::Application,
+                             SubLevel::Json,
+                             vec![(Attr::Charset, Value::Utf8)]);
+        let cache_header = Header(CacheControl(vec![CacheDirective::Public,
+                                                    CacheDirective::MaxAge(TTL)]));
         let ip_str = match req.extensions.get::<Router>().unwrap().find("ip") {
             None => {
                 let response = Response::with((status::BadRequest,
-                                               Mime(TopLevel::Text,
-                                                    SubLevel::Plain,
-                                                    vec![(Attr::Charset, Value::Utf8)]),
-                                               Header(CacheControl(vec![CacheDirective::Public,
-                                                             CacheDirective::MaxAge(TTL)])),
+                                               mime_text,
+                                               cache_header,
                                                "Missing IP address"));
                 return Ok(response);
             }
@@ -64,14 +68,10 @@ impl WebService {
         };
         let ip = match IpAddr::from_str(ip_str) {
             Err(_) => {
-                let response = Response::with((status::BadRequest,
-                                               Mime(TopLevel::Text,
-                                                    SubLevel::Plain,
-                                                    vec![(Attr::Charset, Value::Utf8)]),
-                                               Header(CacheControl(vec![CacheDirective::Public,
-                                                             CacheDirective::MaxAge(TTL)])),
-                                               "Invalid IP address"));
-                return Ok(response);
+                return Ok(Response::with((status::BadRequest,
+                                          mime_text,
+                                          cache_header,
+                                          "Invalid IP address")));
             }
             Ok(ip) => ip,
         };
@@ -81,14 +81,7 @@ impl WebService {
                 let mut map = serde_json::Map::new();
                 map.insert("announced", serde_json::value::Value::Bool(false));
                 let json = serde_json::to_string(&map).unwrap();
-                let response = Response::with((status::Ok,
-                                               Mime(TopLevel::Application,
-                                                    SubLevel::Json,
-                                                    vec![(Attr::Charset, Value::Utf8)]),
-                                               Header(CacheControl(vec![CacheDirective::Public,
-                                                    CacheDirective::MaxAge(TTL)])),
-                                               json));
-                return Ok(response);
+                return Ok(Response::with((status::Ok, mime_json, cache_header, json)));
             }
             Some(found) => found,
         };
@@ -105,14 +98,7 @@ impl WebService {
         map.insert("as_description",
                    serde_json::value::Value::String(found.description.clone()));
         let json = serde_json::to_string(&map).unwrap();
-        let response = Response::with((status::Ok,
-                                       Mime(TopLevel::Application,
-                                            SubLevel::Json,
-                                            vec![(Attr::Charset, Value::Utf8)]),
-                                       Header(CacheControl(vec![CacheDirective::Public,
-                                                                CacheDirective::MaxAge(TTL)])),
-                                       json));
-        Ok(response)
+        Ok(Response::with((status::Ok, mime_json, cache_header, json)))
     }
 
     pub fn start(asns: ASNs, listen_addr: &str) {
