@@ -1,0 +1,21 @@
+[package]
+name = "ip2asn-api"
+version = "0.1.0"
+authors = ["Frank Denis <github@pureftpd.org>"]
+
+[dependencies]
+flate2 = "*"
+hyper = "*"
+iron = "*"
+log = "*"
+router = "*"
+serde = "*"
+serde_json = "*"
+slog = "*"
+slog-envlogger = "*"
+slog-stdlog = "*"
+slog-term = "*"
+clippy = {version = "*", optional = true}
+
+[features]
+default = []
