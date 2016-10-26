@@ -53,9 +53,14 @@ pub struct ASNs {
 }
 
 impl ASNs {
-    pub fn new(url: &str) -> ASNs {
+    pub fn new(url: &str) -> Result<ASNs, &'static str> {
+        info!("Loading the database");
         let client = client::Client::new();
         let res = client.get(url).send().unwrap();
+        if res.status != hyper::Ok {
+            error!("Unable to load the database");
+            return Err("Unable to load the database");
+        }
         assert_eq!(res.status, hyper::Ok);
         let mut data = String::new();
         GzDecoder::new(res).unwrap().read_to_string(&mut data).unwrap();
@@ -76,7 +81,8 @@ impl ASNs {
             };
             asns.insert(asn);
         }
-        ASNs { asns: asns }
+        info!("Database loaded");
+        Ok(ASNs { asns: asns })
     }
 
     pub fn lookup_by_ip(&self, ip: IpAddr) -> Option<&ASN> {
