@@ -1,5 +1,5 @@
 [package]
-name = "ip2asn-api"
+name = "iptoasn-webservice"
 version = "0.1.0"
 authors = ["Frank Denis <github@pureftpd.org>"]
 
