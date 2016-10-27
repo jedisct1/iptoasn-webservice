@@ -62,7 +62,7 @@ fn update_asns(asns_arc: &Arc<RwLock<Arc<ASNs>>>, db_url: &str) {
 fn main() {
     logger_init();
     let matches = App::new("iptoasn webservice")
-        .version("0.2")
+        .version("0.2.0")
         .author("Frank Denis")
         .about("Webservice for https://iptoasn.com")
         .arg(Arg::with_name("listen_addr")
