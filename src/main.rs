@@ -21,6 +21,8 @@ mod webservice;
 use asns::*;
 use clap::{Arg, App};
 use std::sync::{Arc, RwLock};
+use std::thread;
+use std::time::Duration;
 use webservice::*;
 
 fn logger_init() {
@@ -39,10 +41,28 @@ fn logger_init() {
     slog_stdlog::set_logger(root_logger.clone()).unwrap();
 }
 
+fn get_asns(db_url: &str) -> Result<ASNs, &'static str> {
+    info!("Retrieving ASNs");
+    let asns = ASNs::new(db_url);
+    info!("ASNs loaded");
+    asns
+}
+
+fn update_asns(asns_arc: &Arc<RwLock<Arc<ASNs>>>, db_url: &str) {
+    let asns = match get_asns(db_url) {
+        Ok(asns) => asns,
+        Err(e) => {
+            warn!("{}", e);
+            return;
+        }
+    };
+    *asns_arc.write().unwrap() = Arc::new(asns);
+}
+
 fn main() {
     logger_init();
     let matches = App::new("iptoasn webservice")
-        .version("0.1")
+        .version("0.2")
         .author("Frank Denis")
         .about("Webservice for https://iptoasn.com")
         .arg(Arg::with_name("listen_addr")
@@ -60,13 +80,17 @@ fn main() {
             .takes_value(true)
             .default_value("https://iptoasn.com/data/ip2asn-combined.tsv.gz"))
         .get_matches();
-    let db_url = matches.value_of("db_url").unwrap();
+    let db_url = matches.value_of("db_url").unwrap().to_owned();
     let listen_addr = matches.value_of("listen_addr").unwrap();
-    let asns = match ASNs::new(db_url) {
-        Ok(asns) => asns,
-        Err(err) => panic!(format!("{} [{}]", err, db_url)),
-    };
-    let asns_arc = RwLock::new(Arc::new(asns));
+    let asns = get_asns(&db_url).expect("Unable to load the initial database");
+    let asns_arc = Arc::new(RwLock::new(Arc::new(asns)));
+    let asns_arc_copy = asns_arc.clone();
+    thread::spawn(move || {
+        loop {
+            thread::sleep(Duration::from_secs(3600));
+            update_asns(&asns_arc_copy, &db_url);
+        }
+    });
     info!("Starting the webservice");
     WebService::start(asns_arc, listen_addr);
 }

@@ -14,7 +14,7 @@ use std::sync::{Arc, RwLock};
 const TTL: u32 = 86400;
 
 struct ASNsMiddleware {
-    asns_arc: RwLock<Arc<ASNs>>,
+    asns_arc: Arc<RwLock<Arc<ASNs>>>,
 }
 
 impl typemap::Key for ASNsMiddleware {
@@ -22,7 +22,7 @@ impl typemap::Key for ASNsMiddleware {
 }
 
 impl ASNsMiddleware {
-    fn new(asns_arc: RwLock<Arc<ASNs>>) -> ASNsMiddleware {
+    fn new(asns_arc: Arc<RwLock<Arc<ASNs>>>) -> ASNsMiddleware {
         ASNsMiddleware { asns_arc: asns_arc }
     }
 }
@@ -101,7 +101,7 @@ impl WebService {
         Ok(Response::with((status::Ok, mime_json, cache_header, json)))
     }
 
-    pub fn start(asns_arc: RwLock<Arc<ASNs>>, listen_addr: &str) {
+    pub fn start(asns_arc: Arc<RwLock<Arc<ASNs>>>, listen_addr: &str) {
         let router = router!(index: get "/" => Self::index,
                              ip_lookup: get "/v1/as/ip/:ip" => Self::ip_lookup);
         let mut chain = Chain::new(router);
