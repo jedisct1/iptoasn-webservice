@@ -1,6 +1,6 @@
 # iptoasn-webservice
 
-Webservice to map IP addresses to AS information.
+Webservice to map IP addresses to AS information (and DNS history, soon).
 
 This is the source code of the public API from [iptoasn.com](https://iptoasn.com).
 
