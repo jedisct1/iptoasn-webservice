@@ -9,12 +9,12 @@ use router::Router;
 use serde_json;
 use std::net::IpAddr;
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 const TTL: u32 = 86400;
 
 struct ASNsMiddleware {
-    asns: Arc<ASNs>,
+    asns_arc: RwLock<Arc<ASNs>>,
 }
 
 impl typemap::Key for ASNsMiddleware {
@@ -22,14 +22,14 @@ impl typemap::Key for ASNsMiddleware {
 }
 
 impl ASNsMiddleware {
-    fn new(asns: ASNs) -> ASNsMiddleware {
-        ASNsMiddleware { asns: Arc::new(asns) }
+    fn new(asns_arc: RwLock<Arc<ASNs>>) -> ASNsMiddleware {
+        ASNsMiddleware { asns_arc: asns_arc }
     }
 }
 
 impl BeforeMiddleware for ASNsMiddleware {
     fn before(&self, req: &mut Request) -> IronResult<()> {
-        req.extensions.insert::<ASNsMiddleware>(self.asns.clone());
+        req.extensions.insert::<ASNsMiddleware>(self.asns_arc.read().unwrap().clone());
         Ok(())
     }
 }
@@ -101,11 +101,11 @@ impl WebService {
         Ok(Response::with((status::Ok, mime_json, cache_header, json)))
     }
 
-    pub fn start(asns: ASNs, listen_addr: &str) {
+    pub fn start(asns_arc: RwLock<Arc<ASNs>>, listen_addr: &str) {
         let router = router!(index: get "/" => Self::index,
                              ip_lookup: get "/v1/as/ip/:ip" => Self::ip_lookup);
         let mut chain = Chain::new(router);
-        let asns_middleware = ASNsMiddleware::new(asns);
+        let asns_middleware = ASNsMiddleware::new(asns_arc);
         chain.link_before(asns_middleware);
         warn!("webservice ready");
         Iron::new(chain).http(listen_addr).unwrap();

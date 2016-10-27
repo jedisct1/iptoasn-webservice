@@ -20,6 +20,7 @@ mod webservice;
 
 use asns::*;
 use clap::{Arg, App};
+use std::sync::{Arc, RwLock};
 use webservice::*;
 
 fn logger_init() {
@@ -65,6 +66,7 @@ fn main() {
         Ok(asns) => asns,
         Err(err) => panic!(format!("{} [{}]", err, db_url)),
     };
+    let asns_arc = RwLock::new(Arc::new(asns));
     info!("Starting the webservice");
-    WebService::start(asns, listen_addr);
+    WebService::start(asns_arc, listen_addr);
 }
