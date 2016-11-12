@@ -21,3 +21,8 @@ clippy = {version = "*", optional = true}
 
 [features]
 default = []
+
+[profile.release]
+lto = true
+panic = "abort"
+opt-level = 3
