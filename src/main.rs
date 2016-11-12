@@ -7,6 +7,8 @@ extern crate flate2;
 extern crate iron;
 #[macro_use]
 extern crate router;
+#[macro_use]
+extern crate horrorshow;
 extern crate hyper;
 #[macro_use]
 extern crate log;

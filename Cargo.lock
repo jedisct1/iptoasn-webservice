@@ -5,6 +5,7 @@ dependencies = [
  "clap 2.18.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clippy 0.0.98 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.2.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "horrorshow 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.9.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "iron 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -141,6 +142,11 @@ dependencies = [
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "horrorshow"
+version = "0.5.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "hpack"
@@ -742,6 +748,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum flate2 0.2.14 (registry+https://github.com/rust-lang/crates.io-index)" = "3eeb481e957304178d2e782f2da1257f1434dfecbae883bafb61ada2a9fea3bb"
 "checksum gcc 0.3.38 (registry+https://github.com/rust-lang/crates.io-index)" = "553f11439bdefe755bf366b264820f1da70f3aaf3924e594b886beb9c831bcf5"
 "checksum gdi32-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0912515a8ff24ba900422ecda800b52f4016a56251922d397c576bf92c690518"
+"checksum horrorshow 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)" = "234628f89d562b0ad97069e3f808cf109d0ed51b71a7825bfa6d32f317569543"
 "checksum hpack 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3d2da7d3a34cf6406d9d700111b8eafafe9a251de41ae71d8052748259343b58"
 "checksum httparse 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6a8abece705b1d32c478f49447b3a575cd07f6e362ff12518f2ee2c9b9ced64e"
 "checksum hyper 0.9.12 (registry+https://github.com/rust-lang/crates.io-index)" = "d7da01615e9402761faab442396821b57ecb5adb12ac51958561411a82cfdf66"
