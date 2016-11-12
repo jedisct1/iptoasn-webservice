@@ -102,41 +102,39 @@ impl WebService {
             }
             body(class="container-fluid") {
                 header {
-                    h1 {
-                        : format_args!("Information for IP address: {}", ip_str)
-                    }
+                    h1 { : format_args!("Information for IP address: {}", ip_str) }
                 }
                 table {
                     tr {
                         th { : "Announced" }
                         td { : format_args!("{}", map.get("announced")
-                            .unwrap().as_bool().unwrap() ) }
+                            .unwrap().as_bool().unwrap()) }
                     }
                     @ if map.get("announced").unwrap().as_bool().unwrap() == true {
                         tr {
                             th { : "First IP" }
                             td { : format_args!("{}", map.get("first_ip")
-                                .unwrap().as_str().unwrap() )}
+                                .unwrap().as_str().unwrap()) }
                         }
                         tr {
                             th { : "Last IP" }
                             td { : format_args!("{}", map.get("last_ip")
-                                .unwrap().as_str().unwrap() )}
+                                .unwrap().as_str().unwrap()) }
                         }
                         tr {
                             th { : "AS Number" }
                             td { : format_args!("{}", map.get("as_number")
-                                .unwrap().as_u64().unwrap() )}
+                                .unwrap().as_u64().unwrap()) }
                         }
                         tr {
                             th { : "AS Country code" }
                             td { : format_args!("{}", map.get("as_country_code")
-                                .unwrap().as_str().unwrap() )}
+                                .unwrap().as_str().unwrap()) }
                         }
                         tr {
                             th { : "AS Description" }
                             td { : format_args!("{}", map.get("as_description")
-                                .unwrap().as_str().unwrap() )}
+                                .unwrap().as_str().unwrap()) }
                         }
                     }
                 }
