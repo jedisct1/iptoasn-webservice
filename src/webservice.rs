@@ -94,8 +94,8 @@ impl WebService {
         let html = html!{
             head {
                 title { : "iptoasn lookup" }
-                meta(name="viewport", content="width=device-widthinitial-scale=1") { }
-                link(rel="stylesheet", href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css", integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi", crossorigin="anonymous") { }
+                meta(name="viewport", content="width=device-widthinitial-scale=1");
+                link(rel="stylesheet", href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css", integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi", crossorigin="anonymous");
                 style {
                     : "body { margin: 1em 4em }"
                 }
@@ -107,8 +107,8 @@ impl WebService {
                 table {
                     tr {
                         th { : "Announced" }
-                        td { : format_args!("{}", map.get("announced")
-                            .unwrap().as_bool().unwrap()) }
+                        td { : format_args!("{}", if map.get("announced")
+                            .unwrap().as_bool().unwrap() { "Yes" } else { "No" }) }
                     }
                     @ if map.get("announced").unwrap().as_bool().unwrap() == true {
                         tr {
@@ -142,7 +142,7 @@ impl WebService {
         }
             .into_string()
             .unwrap();
-        let html = format!("<!doctype html>\n<html>\n{}</html>", html);
+        let html = format!("<!DOCTYPE html>\n<html>{}</html>", html);
         Ok(Response::with((status::Ok, mime_html, cache_header, html)))
     }
 
