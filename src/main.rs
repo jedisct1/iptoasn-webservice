@@ -14,7 +14,7 @@ extern crate hyper;
 extern crate log;
 extern crate serde;
 extern crate serde_json;
-#[macro_use(slog_error, slog_info, slog_trace, slog_log, o)]
+#[macro_use(o)]
 extern crate slog;
 
 mod asns;
