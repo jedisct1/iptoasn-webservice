@@ -30,7 +30,7 @@ run_test_suite() {
     cargo test --target $TARGET
 
     # sanity check the file type
-    file target/$TARGET/debug/iptoasn_webservice
+    file target/$TARGET/debug/iptoasn-webservice
 }
 
 main() {
