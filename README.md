@@ -4,7 +4,7 @@ Webservice to map IP addresses to AS information (and DNS history, soon).
 
 This is the source code of the public API from [iptoasn.com](https://iptoasn.com).
 
-Requires [rust-nightly](https://www.rust-lang.org/).
+Requires [rust >= 1.17](https://www.rust-lang.org/).
 
 # Usage:
 

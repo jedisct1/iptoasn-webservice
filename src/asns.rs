@@ -63,7 +63,10 @@ impl ASNs {
         }
         assert_eq!(res.status, hyper::Ok);
         let mut data = String::new();
-        GzDecoder::new(res).unwrap().read_to_string(&mut data).unwrap();
+        GzDecoder::new(res)
+            .unwrap()
+            .read_to_string(&mut data)
+            .unwrap();
         let mut asns = BTreeSet::new();
         for line in data.split_terminator('\n') {
             let mut parts = line.split('\t');
@@ -87,7 +90,9 @@ impl ASNs {
 
     pub fn lookup_by_ip(&self, ip: IpAddr) -> Option<&ASN> {
         let fasn = ASN::from_single_ip(ip);
-        match self.asns.range((Unbounded, Included(&fasn))).next_back() {
+        match self.asns
+                  .range((Unbounded, Included(&fasn)))
+                  .next_back() {
             Some(found) if ip <= found.last_ip && found.number > 0 => Some(found),
             _ => None,
         }

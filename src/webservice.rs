@@ -30,7 +30,8 @@ impl ASNsMiddleware {
 
 impl BeforeMiddleware for ASNsMiddleware {
     fn before(&self, req: &mut Request) -> IronResult<()> {
-        req.extensions.insert::<ASNsMiddleware>(self.asns_arc.read().unwrap().clone());
+        req.extensions
+            .insert::<ASNsMiddleware>(self.asns_arc.read().unwrap().clone());
         Ok(())
     }
 }
@@ -74,7 +75,7 @@ impl WebService {
     }
 
     fn output_json(_ip_str: &str,
-                   map: serde_json::Map<&'static str, serde_json::value::Value>,
+                   map: serde_json::Map<String, serde_json::value::Value>,
                    cache_header: Header<CacheControl>)
                    -> IronResult<Response> {
         let json = serde_json::to_string(&map).unwrap();
@@ -85,7 +86,7 @@ impl WebService {
     }
 
     fn output_html(ip_str: &str,
-                   map: serde_json::Map<&'static str, serde_json::value::Value>,
+                   map: serde_json::Map<String, serde_json::value::Value>,
                    cache_header: Header<CacheControl>)
                    -> IronResult<Response> {
         let mime_html = Mime(TopLevel::Text,
@@ -148,7 +149,7 @@ impl WebService {
 
     fn output(output_type: OutputType,
               ip_str: &str,
-              map: serde_json::Map<&'static str, serde_json::value::Value>,
+              map: serde_json::Map<String, serde_json::value::Value>,
               cache_header: Header<CacheControl>)
               -> IronResult<Response> {
         match output_type {
@@ -186,22 +187,24 @@ impl WebService {
         let found = match asns.lookup_by_ip(ip) {
             None => {
                 let mut map = serde_json::Map::new();
-                map.insert("announced", serde_json::value::Value::Bool(false));
+                map.insert("announced".to_string(),
+                           serde_json::value::Value::Bool(false));
                 return Self::output(Self::accept_type(&req), ip_str, map, cache_header);
             }
             Some(found) => found,
         };
         let mut map = serde_json::Map::new();
-        map.insert("announced", serde_json::value::Value::Bool(true));
-        map.insert("first_ip",
+        map.insert("announced".to_string(),
+                   serde_json::value::Value::Bool(true));
+        map.insert("first_ip".to_string(),
                    serde_json::value::Value::String(found.first_ip.to_string()));
-        map.insert("last_ip",
+        map.insert("last_ip".to_string(),
                    serde_json::value::Value::String(found.last_ip.to_string()));
-        map.insert("as_number",
-                   serde_json::value::Value::U64(found.number as u64));
-        map.insert("as_country_code",
+        map.insert("as_number".to_string(),
+                   serde_json::value::Value::Number(serde_json::Number::from(found.number)));
+        map.insert("as_country_code".to_string(),
                    serde_json::value::Value::String(found.country.clone()));
-        map.insert("as_description",
+        map.insert("as_description".to_string(),
                    serde_json::value::Value::String(found.description.clone()));
         Self::output(Self::accept_type(&req), ip_str, map, cache_header)
     }
