@@ -14,6 +14,10 @@ matrix:
       rust: nightly
       env: TARGET=x86_64-unknown-linux-gnu
 
+    - os: linux
+      rust: stable
+      env: TARGET=x86_64-unknown-linux-gnu
+
   allow_failures:
     # TODO You might need to allow failures for some target on some channel for some reason. Below
     # there's one (commented out) example of how to do that. Just change the OS, channel and TARGET
