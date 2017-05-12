@@ -189,7 +189,7 @@ impl WebService {
                 let mut map = serde_json::Map::new();
                 map.insert("announced".to_string(),
                            serde_json::value::Value::Bool(false));
-                return Self::output(Self::accept_type(&req), ip_str, map, cache_header);
+                return Self::output(Self::accept_type(req), ip_str, map, cache_header);
             }
             Some(found) => found,
         };
@@ -206,7 +206,7 @@ impl WebService {
                    serde_json::value::Value::String(found.country.clone()));
         map.insert("as_description".to_string(),
                    serde_json::value::Value::String(found.description.clone()));
-        Self::output(Self::accept_type(&req), ip_str, map, cache_header)
+        Self::output(Self::accept_type(req), ip_str, map, cache_header)
     }
 
     pub fn start(asns_arc: Arc<RwLock<Arc<ASNs>>>, listen_addr: &str) {
