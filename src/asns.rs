@@ -1,5 +1,7 @@
 use flate2::read::GzDecoder;
-use hyper::{self, client};
+use hyper::net::HttpsConnector;
+use hyper::{self, Client};
+use hyper_native_tls::NativeTlsClient;
 use std::cmp::{Eq, PartialOrd, PartialEq, Ord, Ordering};
 use std::collections::Bound::{Included, Unbounded};
 use std::collections::BTreeSet;
@@ -55,7 +57,9 @@ pub struct ASNs {
 impl ASNs {
     pub fn new(url: &str) -> Result<ASNs, &'static str> {
         info!("Loading the database");
-        let client = client::Client::new();
+        let tls = NativeTlsClient::new().unwrap();
+        let connector = HttpsConnector::new(tls);
+        let client = Client::with_connector(connector);
         let res = client.get(url).send().unwrap();
         if res.status != hyper::Ok {
             error!("Unable to load the database");
@@ -90,9 +94,7 @@ impl ASNs {
 
     pub fn lookup_by_ip(&self, ip: IpAddr) -> Option<&ASN> {
         let fasn = ASN::from_single_ip(ip);
-        match self.asns
-                  .range((Unbounded, Included(&fasn)))
-                  .next_back() {
+        match self.asns.range((Unbounded, Included(&fasn))).next_back() {
             Some(found) if ip <= found.last_ip && found.number > 0 => Some(found),
             _ => None,
         }
