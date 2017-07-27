@@ -74,8 +74,7 @@ impl WebService {
         output_type
     }
 
-    fn output_json(_ip_str: &str,
-                   map: serde_json::Map<String, serde_json::value::Value>,
+    fn output_json(map: serde_json::Map<String, serde_json::value::Value>,
                    cache_header: Header<CacheControl>)
                    -> IronResult<Response> {
         let json = serde_json::to_string(&map).unwrap();
@@ -85,8 +84,7 @@ impl WebService {
         Ok(Response::with((status::Ok, mime_json, cache_header, json)))
     }
 
-    fn output_html(ip_str: &str,
-                   map: serde_json::Map<String, serde_json::value::Value>,
+    fn output_html(map: serde_json::Map<String, serde_json::value::Value>,
                    cache_header: Header<CacheControl>)
                    -> IronResult<Response> {
         let mime_html = Mime(TopLevel::Text,
@@ -103,7 +101,7 @@ impl WebService {
             }
             body(class="container-fluid") {
                 header {
-                    h1 { : format_args!("Information for IP address: {}", ip_str) }
+                    h1 { : format_args!("Information for IP address: {}", map.get("ip").unwrap().as_str().unwrap()) }
                 }
                 table {
                     tr {
@@ -148,13 +146,12 @@ impl WebService {
     }
 
     fn output(output_type: OutputType,
-              ip_str: &str,
               map: serde_json::Map<String, serde_json::value::Value>,
               cache_header: Header<CacheControl>)
               -> IronResult<Response> {
         match output_type {
-            OutputType::Json => Self::output_json(ip_str, map, cache_header),
-            _ => Self::output_html(ip_str, map, cache_header),
+            OutputType::Json => Self::output_json(map, cache_header),
+            _ => Self::output_html(map, cache_header),
         }
     }
 
@@ -189,11 +186,13 @@ impl WebService {
                 let mut map = serde_json::Map::new();
                 map.insert("announced".to_string(),
                            serde_json::value::Value::Bool(false));
-                return Self::output(Self::accept_type(&req), ip_str, map, cache_header);
+                return Self::output(Self::accept_type(&req), map, cache_header);
             }
             Some(found) => found,
         };
         let mut map = serde_json::Map::new();
+        map.insert("ip".to_string(),
+                   serde_json::value::Value::String(ip_str.to_string()));
         map.insert("announced".to_string(),
                    serde_json::value::Value::Bool(true));
         map.insert("first_ip".to_string(),
@@ -206,7 +205,7 @@ impl WebService {
                    serde_json::value::Value::String(found.country.clone()));
         map.insert("as_description".to_string(),
                    serde_json::value::Value::String(found.description.clone()));
-        Self::output(Self::accept_type(&req), ip_str, map, cache_header)
+        Self::output(Self::accept_type(&req), map, cache_header)
     }
 
     pub fn start(asns_arc: Arc<RwLock<Arc<ASNs>>>, listen_addr: &str) {
