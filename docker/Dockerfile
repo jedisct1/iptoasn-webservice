@@ -12,8 +12,13 @@ RUN apk update \
     rust \
     cargo \
     libressl-dev \
+  \
   && cargo build --release \
+  && strip target/release/iptoasn-webservice \
   && mv target/release/iptoasn-webservice /usr/bin/iptoasn-webservice \
+  && mv docker/iptoasn-entrypoint.sh /iptoasn-entrypoint.sh \
+  && chmod +x /iptoasn-entrypoint.sh \
+  \
   && rm -rf  ~/.cargo \
             /var/cache/apk/* \
             /tmp/* \
@@ -22,4 +27,4 @@ RUN apk update \
 RUN adduser -D app
 USER app
 
-ENTRYPOINT /usr/bin/iptoasn-webservice --listen 0.0.0.0:10000
+ENTRYPOINT ["/iptoasn-entrypoint.sh"]
