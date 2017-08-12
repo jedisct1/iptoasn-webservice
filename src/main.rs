@@ -1,25 +1,25 @@
-#![cfg_attr(feature="clippy", feature(plugin))]
-#![cfg_attr(feature="clippy", plugin(clippy))]
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
 
 extern crate clap;
 extern crate flate2;
-extern crate iron;
-#[macro_use]
-extern crate router;
 #[macro_use]
 extern crate horrorshow;
 extern crate hyper;
 extern crate hyper_native_tls;
-extern crate serde;
-extern crate serde_json;
+extern crate iron;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate router;
+extern crate serde;
+extern crate serde_json;
 
 mod asns;
 mod webservice;
 
 use asns::*;
-use clap::{Arg, App};
+use clap::{App, Arg};
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
@@ -48,20 +48,24 @@ fn main() {
         .version("0.2.0")
         .author("Frank Denis")
         .about("Webservice for https://iptoasn.com")
-        .arg(Arg::with_name("listen_addr")
-                 .short("l")
-                 .long("listen")
-                 .value_name("ip:port")
-                 .help("Webservice IP and port")
-                 .takes_value(true)
-                 .default_value("0.0.0.0:53661"))
-        .arg(Arg::with_name("db_url")
-                 .short("u")
-                 .long("dburl")
-                 .value_name("url")
-                 .help("URL of the gzipped database")
-                 .takes_value(true)
-                 .default_value("https://iptoasn.com/data/ip2asn-combined.tsv.gz"))
+        .arg(
+            Arg::with_name("listen_addr")
+                .short("l")
+                .long("listen")
+                .value_name("ip:port")
+                .help("Webservice IP and port")
+                .takes_value(true)
+                .default_value("0.0.0.0:53661"),
+        )
+        .arg(
+            Arg::with_name("db_url")
+                .short("u")
+                .long("dburl")
+                .value_name("url")
+                .help("URL of the gzipped database")
+                .takes_value(true)
+                .default_value("https://iptoasn.com/data/ip2asn-combined.tsv.gz"),
+        )
         .get_matches();
     let db_url = matches.value_of("db_url").unwrap().to_owned();
     let listen_addr = matches.value_of("listen_addr").unwrap();
@@ -69,9 +73,9 @@ fn main() {
     let asns_arc = Arc::new(RwLock::new(Arc::new(asns)));
     let asns_arc_copy = asns_arc.clone();
     thread::spawn(move || loop {
-                      thread::sleep(Duration::from_secs(3600));
-                      update_asns(&asns_arc_copy, &db_url);
-                  });
+        thread::sleep(Duration::from_secs(3600));
+        update_asns(&asns_arc_copy, &db_url);
+    });
     info!("Starting the webservice");
     WebService::start(asns_arc, listen_addr);
 }

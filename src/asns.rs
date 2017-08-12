@@ -2,7 +2,7 @@ use flate2::read::GzDecoder;
 use hyper::net::HttpsConnector;
 use hyper::{self, Client};
 use hyper_native_tls::NativeTlsClient;
-use std::cmp::{Eq, PartialOrd, PartialEq, Ord, Ordering};
+use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
 use std::collections::Bound::{Included, Unbounded};
 use std::collections::BTreeSet;
 use std::io::prelude::*;

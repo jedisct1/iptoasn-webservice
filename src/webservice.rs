@@ -1,7 +1,7 @@
 use asns::*;
 use horrorshow::prelude::*;
-use iron::{BeforeMiddleware, typemap};
-use iron::headers::{CacheControl, CacheDirective, Accept};
+use iron::{typemap, BeforeMiddleware};
+use iron::headers::{Accept, CacheControl, CacheDirective};
 use iron::mime::*;
 use iron::modifiers::Header;
 use iron::prelude::*;
@@ -45,13 +45,18 @@ pub struct WebService;
 
 impl WebService {
     fn index(_: &mut Request) -> IronResult<Response> {
-        Ok(Response::with((status::Ok,
-                           Mime(TopLevel::Text,
-                                SubLevel::Plain,
-                                vec![(Attr::Charset, Value::Utf8)]),
-                           Header(CacheControl(vec![CacheDirective::Public,
-                                                    CacheDirective::MaxAge(TTL)])),
-                           "See https://iptoasn.com")))
+        Ok(Response::with((
+            status::Ok,
+            Mime(
+                TopLevel::Text,
+                SubLevel::Plain,
+                vec![(Attr::Charset, Value::Utf8)],
+            ),
+            Header(CacheControl(
+                vec![CacheDirective::Public, CacheDirective::MaxAge(TTL)],
+            )),
+            "See https://iptoasn.com",
+        )))
     }
 
     fn accept_type(req: &Request) -> OutputType {
@@ -74,22 +79,28 @@ impl WebService {
         output_type
     }
 
-    fn output_json(map: serde_json::Map<String, serde_json::value::Value>,
-                   cache_header: Header<CacheControl>)
-                   -> IronResult<Response> {
+    fn output_json(
+        map: serde_json::Map<String, serde_json::value::Value>,
+        cache_header: Header<CacheControl>,
+    ) -> IronResult<Response> {
         let json = serde_json::to_string(&map).unwrap();
-        let mime_json = Mime(TopLevel::Application,
-                             SubLevel::Json,
-                             vec![(Attr::Charset, Value::Utf8)]);
+        let mime_json = Mime(
+            TopLevel::Application,
+            SubLevel::Json,
+            vec![(Attr::Charset, Value::Utf8)],
+        );
         Ok(Response::with((status::Ok, mime_json, cache_header, json)))
     }
 
-    fn output_html(map: serde_json::Map<String, serde_json::value::Value>,
-                   cache_header: Header<CacheControl>)
-                   -> IronResult<Response> {
-        let mime_html = Mime(TopLevel::Text,
-                             SubLevel::Html,
-                             vec![(Attr::Charset, Value::Utf8)]);
+    fn output_html(
+        map: serde_json::Map<String, serde_json::value::Value>,
+        cache_header: Header<CacheControl>,
+    ) -> IronResult<Response> {
+        let mime_html = Mime(
+            TopLevel::Text,
+            SubLevel::Html,
+            vec![(Attr::Charset, Value::Utf8)],
+        );
         let html = html!{
             head {
                 title { : "iptoasn lookup" }
@@ -145,10 +156,11 @@ impl WebService {
         Ok(Response::with((status::Ok, mime_html, cache_header, html)))
     }
 
-    fn output(output_type: OutputType,
-              map: serde_json::Map<String, serde_json::value::Value>,
-              cache_header: Header<CacheControl>)
-              -> IronResult<Response> {
+    fn output(
+        output_type: OutputType,
+        map: serde_json::Map<String, serde_json::value::Value>,
+        cache_header: Header<CacheControl>,
+    ) -> IronResult<Response> {
         match output_type {
             OutputType::Json => Self::output_json(map, cache_header),
             _ => Self::output_html(map, cache_header),
@@ -156,54 +168,77 @@ impl WebService {
     }
 
     fn ip_lookup(req: &mut Request) -> IronResult<Response> {
-        let mime_text = Mime(TopLevel::Text,
-                             SubLevel::Plain,
-                             vec![(Attr::Charset, Value::Utf8)]);
-        let cache_header = Header(CacheControl(vec![CacheDirective::Public,
-                                                    CacheDirective::MaxAge(TTL)]));
+        let mime_text = Mime(
+            TopLevel::Text,
+            SubLevel::Plain,
+            vec![(Attr::Charset, Value::Utf8)],
+        );
+        let cache_header = Header(CacheControl(
+            vec![CacheDirective::Public, CacheDirective::MaxAge(TTL)],
+        ));
         let ip_str = match req.extensions.get::<Router>().unwrap().find("ip") {
             None => {
-                let response = Response::with((status::BadRequest,
-                                               mime_text,
-                                               cache_header,
-                                               "Missing IP address"));
+                let response = Response::with((
+                    status::BadRequest,
+                    mime_text,
+                    cache_header,
+                    "Missing IP address",
+                ));
                 return Ok(response);
             }
             Some(ip_str) => ip_str,
         };
         let ip = match IpAddr::from_str(ip_str) {
             Err(_) => {
-                return Ok(Response::with((status::BadRequest,
-                                          mime_text,
-                                          cache_header,
-                                          "Invalid IP address")));
+                return Ok(Response::with((
+                    status::BadRequest,
+                    mime_text,
+                    cache_header,
+                    "Invalid IP address",
+                )));
             }
             Ok(ip) => ip,
         };
         let asns = req.extensions.get::<ASNsMiddleware>().unwrap();
         let mut map = serde_json::Map::new();
-        map.insert("ip".to_string(),
-                   serde_json::value::Value::String(ip_str.to_string()));
+        map.insert(
+            "ip".to_string(),
+            serde_json::value::Value::String(ip_str.to_string()),
+        );
         let found = match asns.lookup_by_ip(ip) {
             None => {
-                map.insert("announced".to_string(),
-                           serde_json::value::Value::Bool(false));
+                map.insert(
+                    "announced".to_string(),
+                    serde_json::value::Value::Bool(false),
+                );
                 return Self::output(Self::accept_type(&req), map, cache_header);
             }
             Some(found) => found,
         };
-        map.insert("announced".to_string(),
-                   serde_json::value::Value::Bool(true));
-        map.insert("first_ip".to_string(),
-                   serde_json::value::Value::String(found.first_ip.to_string()));
-        map.insert("last_ip".to_string(),
-                   serde_json::value::Value::String(found.last_ip.to_string()));
-        map.insert("as_number".to_string(),
-                   serde_json::value::Value::Number(serde_json::Number::from(found.number)));
-        map.insert("as_country_code".to_string(),
-                   serde_json::value::Value::String(found.country.clone()));
-        map.insert("as_description".to_string(),
-                   serde_json::value::Value::String(found.description.clone()));
+        map.insert(
+            "announced".to_string(),
+            serde_json::value::Value::Bool(true),
+        );
+        map.insert(
+            "first_ip".to_string(),
+            serde_json::value::Value::String(found.first_ip.to_string()),
+        );
+        map.insert(
+            "last_ip".to_string(),
+            serde_json::value::Value::String(found.last_ip.to_string()),
+        );
+        map.insert(
+            "as_number".to_string(),
+            serde_json::value::Value::Number(serde_json::Number::from(found.number)),
+        );
+        map.insert(
+            "as_country_code".to_string(),
+            serde_json::value::Value::String(found.country.clone()),
+        );
+        map.insert(
+            "as_description".to_string(),
+            serde_json::value::Value::String(found.description.clone()),
+        );
         Self::output(Self::accept_type(&req), map, cache_header)
     }
 
