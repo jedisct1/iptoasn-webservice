@@ -181,18 +181,17 @@ impl WebService {
             Ok(ip) => ip,
         };
         let asns = req.extensions.get::<ASNsMiddleware>().unwrap();
+        let mut map = serde_json::Map::new();
+        map.insert("ip".to_string(),
+                   serde_json::value::Value::String(ip_str.to_string()));
         let found = match asns.lookup_by_ip(ip) {
             None => {
-                let mut map = serde_json::Map::new();
                 map.insert("announced".to_string(),
                            serde_json::value::Value::Bool(false));
                 return Self::output(Self::accept_type(&req), map, cache_header);
             }
             Some(found) => found,
         };
-        let mut map = serde_json::Map::new();
-        map.insert("ip".to_string(),
-                   serde_json::value::Value::String(ip_str.to_string()));
         map.insert("announced".to_string(),
                    serde_json::value::Value::Bool(true));
         map.insert("first_ip".to_string(),
