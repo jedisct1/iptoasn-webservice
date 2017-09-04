@@ -1,10 +1,10 @@
 use flate2::read::GzDecoder;
-use hyper::net::HttpsConnector;
 use hyper::{self, Client};
+use hyper::net::HttpsConnector;
 use hyper_native_tls::NativeTlsClient;
 use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
-use std::collections::Bound::{Included, Unbounded};
 use std::collections::BTreeSet;
+use std::collections::Bound::{Included, Unbounded};
 use std::io::prelude::*;
 use std::net::IpAddr;
 use std::str::FromStr;
