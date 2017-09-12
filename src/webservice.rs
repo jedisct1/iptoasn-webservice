@@ -1,7 +1,7 @@
 use asns::*;
 use horrorshow::prelude::*;
 use iron::{typemap, BeforeMiddleware};
-use iron::headers::{Accept, CacheControl, CacheDirective};
+use iron::headers::{Accept, CacheControl, CacheDirective, Vary};
 use iron::mime::*;
 use iron::modifiers::Header;
 use iron::prelude::*;
@@ -11,6 +11,7 @@ use serde_json;
 use std::net::IpAddr;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
+use unicase::UniCase;
 
 const TTL: u32 = 86400;
 
@@ -82,6 +83,7 @@ impl WebService {
     fn output_json(
         map: serde_json::Map<String, serde_json::value::Value>,
         cache_header: Header<CacheControl>,
+        vary_header: Header<Vary>,
     ) -> IronResult<Response> {
         let json = serde_json::to_string(&map).unwrap();
         let mime_json = Mime(
@@ -89,12 +91,15 @@ impl WebService {
             SubLevel::Json,
             vec![(Attr::Charset, Value::Utf8)],
         );
-        Ok(Response::with((status::Ok, mime_json, cache_header, json)))
+        Ok(Response::with(
+            (status::Ok, mime_json, cache_header, vary_header, json),
+        ))
     }
 
     fn output_html(
         map: serde_json::Map<String, serde_json::value::Value>,
         cache_header: Header<CacheControl>,
+        vary_header: Header<Vary>,
     ) -> IronResult<Response> {
         let mime_html = Mime(
             TopLevel::Text,
@@ -153,17 +158,20 @@ impl WebService {
             .into_string()
             .unwrap();
         let html = format!("<!DOCTYPE html>\n<html>{}</html>", html);
-        Ok(Response::with((status::Ok, mime_html, cache_header, html)))
+        Ok(Response::with(
+            (status::Ok, mime_html, cache_header, vary_header, html),
+        ))
     }
 
     fn output(
         output_type: OutputType,
         map: serde_json::Map<String, serde_json::value::Value>,
         cache_header: Header<CacheControl>,
+        vary_header: Header<Vary>,
     ) -> IronResult<Response> {
         match output_type {
-            OutputType::Json => Self::output_json(map, cache_header),
-            _ => Self::output_html(map, cache_header),
+            OutputType::Json => Self::output_json(map, cache_header, vary_header),
+            _ => Self::output_html(map, cache_header, vary_header),
         }
     }
 
@@ -176,6 +184,10 @@ impl WebService {
         let cache_header = Header(CacheControl(
             vec![CacheDirective::Public, CacheDirective::MaxAge(TTL)],
         ));
+        let vary_header = Header(Vary::Items(vec![
+            UniCase::from_str("accept-encoding").unwrap(),
+            UniCase::from_str("accept").unwrap(),
+        ]));
         let ip_str = match req.extensions.get::<Router>().unwrap().find("ip") {
             None => {
                 let response = Response::with((
@@ -211,7 +223,7 @@ impl WebService {
                     "announced".to_string(),
                     serde_json::value::Value::Bool(false),
                 );
-                return Self::output(Self::accept_type(&req), map, cache_header);
+                return Self::output(Self::accept_type(&req), map, cache_header, vary_header);
             }
             Some(found) => found,
         };
@@ -239,7 +251,7 @@ impl WebService {
             "as_description".to_string(),
             serde_json::value::Value::String(found.description.clone()),
         );
-        Self::output(Self::accept_type(&req), map, cache_header)
+        Self::output(Self::accept_type(&req), map, cache_header, vary_header)
     }
 
     pub fn start(asns_arc: Arc<RwLock<Arc<ASNs>>>, listen_addr: &str) {

@@ -12,8 +12,8 @@ extern crate iron;
 extern crate log;
 #[macro_use]
 extern crate router;
-extern crate serde;
 extern crate serde_json;
+extern crate unicase;
 
 mod asns;
 mod webservice;
