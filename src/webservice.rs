@@ -13,7 +13,7 @@ use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use unicase::UniCase;
 
-const TTL: u32 = 86400;
+const TTL: u32 = 86_400;
 
 struct ASNsMiddleware {
     asns_arc: Arc<RwLock<Arc<ASNs>>>,
@@ -82,7 +82,7 @@ impl WebService {
     }
 
     fn output_json(
-        map: serde_json::Map<String, serde_json::value::Value>,
+        map: &serde_json::Map<String, serde_json::value::Value>,
         cache_header: Header<CacheControl>,
         vary_header: Header<Vary>,
     ) -> IronResult<Response> {
@@ -102,7 +102,7 @@ impl WebService {
     }
 
     fn output_html(
-        map: serde_json::Map<String, serde_json::value::Value>,
+        map: &serde_json::Map<String, serde_json::value::Value>,
         cache_header: Header<CacheControl>,
         vary_header: Header<Vary>,
     ) -> IronResult<Response> {
@@ -130,7 +130,7 @@ impl WebService {
                         td { : format_args!("{}", if map.get("announced")
                             .unwrap().as_bool().unwrap() { "Yes" } else { "No" }) }
                     }
-                    @ if map.get("announced").unwrap().as_bool().unwrap() == true {
+                    @ if map.get("announced").unwrap().as_bool().unwrap() {
                         tr {
                             th { : "First IP" }
                             td { : format_args!("{}", map.get("first_ip")
@@ -172,12 +172,12 @@ impl WebService {
     }
 
     fn output(
-        output_type: OutputType,
-        map: serde_json::Map<String, serde_json::value::Value>,
+        output_type: &OutputType,
+        map: &serde_json::Map<String, serde_json::value::Value>,
         cache_header: Header<CacheControl>,
         vary_header: Header<Vary>,
     ) -> IronResult<Response> {
-        match output_type {
+        match *output_type {
             OutputType::Json => Self::output_json(map, cache_header, vary_header),
             _ => Self::output_html(map, cache_header, vary_header),
         }
@@ -232,7 +232,7 @@ impl WebService {
                     "announced".to_string(),
                     serde_json::value::Value::Bool(false),
                 );
-                return Self::output(Self::accept_type(&req), map, cache_header, vary_header);
+                return Self::output(&Self::accept_type(req), &map, cache_header, vary_header);
             }
             Some(found) => found,
         };
@@ -260,7 +260,7 @@ impl WebService {
             "as_description".to_string(),
             serde_json::value::Value::String(found.description.clone()),
         );
-        Self::output(Self::accept_type(&req), map, cache_header, vary_header)
+        Self::output(&Self::accept_type(req), &map, cache_header, vary_header)
     }
 
     pub fn start(asns_arc: Arc<RwLock<Arc<ASNs>>>, listen_addr: &str) {
