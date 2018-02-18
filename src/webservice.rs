@@ -53,9 +53,10 @@ impl WebService {
                 SubLevel::Plain,
                 vec![(Attr::Charset, Value::Utf8)],
             ),
-            Header(CacheControl(
-                vec![CacheDirective::Public, CacheDirective::MaxAge(TTL)],
-            )),
+            Header(CacheControl(vec![
+                CacheDirective::Public,
+                CacheDirective::MaxAge(TTL),
+            ])),
             "See https://iptoasn.com",
         )))
     }
@@ -91,9 +92,13 @@ impl WebService {
             SubLevel::Json,
             vec![(Attr::Charset, Value::Utf8)],
         );
-        Ok(Response::with(
-            (status::Ok, mime_json, cache_header, vary_header, json),
-        ))
+        Ok(Response::with((
+            status::Ok,
+            mime_json,
+            cache_header,
+            vary_header,
+            json,
+        )))
     }
 
     fn output_html(
@@ -154,13 +159,16 @@ impl WebService {
                     }
                 }
             }
-        }
-            .into_string()
+        }.into_string()
             .unwrap();
         let html = format!("<!DOCTYPE html>\n<html>{}</html>", html);
-        Ok(Response::with(
-            (status::Ok, mime_html, cache_header, vary_header, html),
-        ))
+        Ok(Response::with((
+            status::Ok,
+            mime_html,
+            cache_header,
+            vary_header,
+            html,
+        )))
     }
 
     fn output(
@@ -181,9 +189,10 @@ impl WebService {
             SubLevel::Plain,
             vec![(Attr::Charset, Value::Utf8)],
         );
-        let cache_header = Header(CacheControl(
-            vec![CacheDirective::Public, CacheDirective::MaxAge(TTL)],
-        ));
+        let cache_header = Header(CacheControl(vec![
+            CacheDirective::Public,
+            CacheDirective::MaxAge(TTL),
+        ]));
         let vary_header = Header(Vary::Items(vec![
             UniCase::from_str("accept-encoding").unwrap(),
             UniCase::from_str("accept").unwrap(),
