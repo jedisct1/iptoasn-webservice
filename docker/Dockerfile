@@ -1,13 +1,14 @@
-FROM alpine:edge
+FROM alpine:3.7
 
-COPY ./ /tmp
+COPY Cargo.* /tmp/iptoasn/
+COPY src /tmp/iptoasn/src
 
-WORKDIR /tmp
+WORKDIR /tmp/iptoasn
 
-RUN apk update \
-  && apk add --no-cache ca-certificates \
-                        libressl \
-                        llvm-libunwind \
+RUN apk add --update --no-cache ca-certificates \
+                                libressl \
+                                llvm-libunwind \
+                                libgcc \
   && apk add --no-cache --virtual .build-rust \
     rust \
     cargo \
@@ -16,15 +17,16 @@ RUN apk update \
   && cargo build --release \
   && strip target/release/iptoasn-webservice \
   && mv target/release/iptoasn-webservice /usr/bin/iptoasn-webservice \
-  && mv docker/iptoasn-entrypoint.sh /iptoasn-entrypoint.sh \
-  && chmod +x /iptoasn-entrypoint.sh \
+  && adduser -D app \
   \
+  && apk del .build-rust \
   && rm -rf  ~/.cargo \
             /var/cache/apk/* \
-            /tmp/* \
-  && apk del .build-rust
+            /tmp/*
 
-RUN adduser -D app
+COPY docker/iptoasn-entrypoint.sh /iptoasn-entrypoint.sh
+RUN chmod +x /iptoasn-entrypoint.sh
+
 USER app
 
 ENTRYPOINT ["/iptoasn-entrypoint.sh"]
