@@ -1,8 +1,8 @@
-## How to use
+# How to use
 
 Assume you are in the repo's root folder:
 
-```bash
+```sh
 docker build -t iptoasn -f docker/Dockerfile .
 docker run -itd \
            --name my-iptoasn \
@@ -11,14 +11,16 @@ docker run -itd \
 ```
 
 Wait while iptoasn is downloading data, and then you can do `curl` requests as you used to:
-```bash
+
+```sh
 curl 127.0.0.1:80/v1/as/ip/8.8.8.8
 ```
 
-### Setting service parameters
+## Setting service parameters
 
 Listen port and database URL can be specified by environment variables:
-```bash
+
+```sh
 docker run -itd \
            --name my-iptoasn \
            -e IPTOASN_PORT=10000 \
@@ -27,8 +29,8 @@ docker run -itd \
            iptoasn
 ```
 
-### Use as a binary
+## Use as a binary
 
-```bash
+```sh
 docker run -it --rm iptoasn --help
 ```
