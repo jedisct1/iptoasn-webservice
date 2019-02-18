@@ -68,7 +68,6 @@ impl ASNs {
         assert_eq!(res.status, hyper::Ok);
         let mut data = String::new();
         GzDecoder::new(res)
-            .unwrap()
             .read_to_string(&mut data)
             .unwrap();
         let mut asns = BTreeSet::new();
