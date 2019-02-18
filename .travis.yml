@@ -1,6 +1,11 @@
 language: rust
 cache: cargo
 
+addons:
+  apt:
+    packages:
+      - fakeroot
+
 env:
   global:
     - PROJECT_NAME=iptoasn-webservice
