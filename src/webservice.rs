@@ -1,11 +1,11 @@
 use asns::*;
 use horrorshow::prelude::*;
-use iron::{typemap, BeforeMiddleware};
 use iron::headers::{Accept, CacheControl, CacheDirective, Vary};
 use iron::mime::*;
 use iron::modifiers::Header;
 use iron::prelude::*;
 use iron::status;
+use iron::{typemap, BeforeMiddleware};
 use router::Router;
 use serde_json;
 use std::net::IpAddr;
@@ -25,7 +25,7 @@ impl typemap::Key for ASNsMiddleware {
 
 impl ASNsMiddleware {
     fn new(asns_arc: Arc<RwLock<Arc<ASNs>>>) -> ASNsMiddleware {
-        ASNsMiddleware { asns_arc: asns_arc }
+        ASNsMiddleware { asns_arc }
     }
 }
 

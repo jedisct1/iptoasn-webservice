@@ -1,6 +1,6 @@
 use flate2::read::GzDecoder;
-use hyper::{self, Client};
 use hyper::net::HttpsConnector;
+use hyper::{self, Client};
 use hyper_native_tls::NativeTlsClient;
 use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
 use std::collections::BTreeSet;
@@ -67,9 +67,7 @@ impl ASNs {
         }
         assert_eq!(res.status, hyper::Ok);
         let mut data = String::new();
-        GzDecoder::new(res)
-            .read_to_string(&mut data)
-            .unwrap();
+        GzDecoder::new(res).read_to_string(&mut data).unwrap();
         let mut asns = BTreeSet::new();
         for line in data.split_terminator('\n') {
             let mut parts = line.split('\t');
@@ -79,16 +77,16 @@ impl ASNs {
             let country = parts.next().unwrap().to_owned();
             let description = parts.next().unwrap().to_owned();
             let asn = ASN {
-                first_ip: first_ip,
-                last_ip: last_ip,
-                number: number,
-                country: country,
-                description: description,
+                first_ip,
+                last_ip,
+                number,
+                country,
+                description,
             };
             asns.insert(asn);
         }
         info!("Database loaded");
-        Ok(ASNs { asns: asns })
+        Ok(ASNs { asns })
     }
 
     pub fn lookup_by_ip(&self, ip: IpAddr) -> Option<&ASN> {
