@@ -1,4 +1,4 @@
-use asns::*;
+use crate::asns::*;
 use horrorshow::prelude::*;
 use iron::headers::{Accept, CacheControl, CacheDirective, Vary};
 use iron::mime::*;
@@ -30,7 +30,7 @@ impl ASNsMiddleware {
 }
 
 impl BeforeMiddleware for ASNsMiddleware {
-    fn before(&self, req: &mut Request) -> IronResult<()> {
+    fn before(&self, req: &mut Request<'_, '_>) -> IronResult<()> {
         req.extensions
             .insert::<ASNsMiddleware>(self.asns_arc.read().unwrap().clone());
         Ok(())
@@ -45,7 +45,7 @@ enum OutputType {
 pub struct WebService;
 
 impl WebService {
-    fn index(_: &mut Request) -> IronResult<Response> {
+    fn index(_: &mut Request<'_, '_>) -> IronResult<Response> {
         Ok(Response::with((
             status::Ok,
             Mime(
@@ -61,7 +61,7 @@ impl WebService {
         )))
     }
 
-    fn accept_type(req: &Request) -> OutputType {
+    fn accept_type(req: &Request<'_, '_>) -> OutputType {
         let mut output_type = OutputType::Json;
         if let Some(header_accept) = req.headers.get::<Accept>() {
             for header in header_accept.iter() {
@@ -183,7 +183,7 @@ impl WebService {
         }
     }
 
-    fn ip_lookup(req: &mut Request) -> IronResult<Response> {
+    fn ip_lookup(req: &mut Request<'_, '_>) -> IronResult<Response> {
         let mime_text = Mime(
             TopLevel::Text,
             SubLevel::Plain,

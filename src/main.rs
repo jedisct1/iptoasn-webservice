@@ -1,26 +1,20 @@
-extern crate clap;
-extern crate flate2;
 #[macro_use]
 extern crate horrorshow;
-extern crate hyper;
-extern crate hyper_native_tls;
-extern crate iron;
+
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate router;
-extern crate serde_json;
-extern crate unicase;
 
 mod asns;
 mod webservice;
 
-use asns::*;
+use crate::asns::*;
+use crate::webservice::*;
 use clap::{App, Arg};
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
-use webservice::*;
 
 fn get_asns(db_url: &str) -> Result<ASNs, &'static str> {
     info!("Retrieving ASNs");
