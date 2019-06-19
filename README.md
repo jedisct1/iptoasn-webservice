@@ -11,7 +11,7 @@ Requires [rust](https://www.rust-lang.org/).
 # Usage:
 
 ```sh
-$ curl https://api.iptoasn.com/v1/as/ip/<ip address>
+$ curl -H'Accept: application/json' https://api.iptoasn.com/v1/as/ip/<ip address>
 ```
 ```json
 {
