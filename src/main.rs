@@ -1,17 +1,18 @@
 #[macro_use]
 extern crate horrorshow;
-
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate router;
+#[macro_use]
+extern crate clap;
 
 mod asns;
 mod webservice;
 
 use crate::asns::*;
 use crate::webservice::*;
-use clap::{App, Arg};
+use clap::Arg;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
@@ -35,10 +36,7 @@ fn update_asns(asns_arc: &Arc<RwLock<Arc<ASNs>>>, db_url: &str) {
 }
 
 fn main() {
-    let matches = App::new("iptoasn webservice")
-        .version("0.2.0")
-        .author("Frank Denis")
-        .about("Webservice for https://iptoasn.com")
+    let matches = app_from_crate!()
         .arg(
             Arg::with_name("listen_addr")
                 .short("l")
