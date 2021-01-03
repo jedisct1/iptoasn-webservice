@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/jedisct1/iptoasn-webservice.svg?branch=master)](https://travis-ci.org/jedisct1/iptoasn-webservice)
+![Build Status](https://github.com/jedisct1/iptoasn-webservice/workflows/Rust/badge.svg)
 
 # iptoasn-webservice
 
