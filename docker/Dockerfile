@@ -1,4 +1,4 @@
-FROM alpine:test
+FROM alpine:3.13.1
 
 COPY Cargo.* /tmp/iptoasn/
 COPY src /tmp/iptoasn/src
