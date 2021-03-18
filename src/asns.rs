@@ -4,9 +4,9 @@ use hyper::{self, Client};
 use hyper_native_tls::NativeTlsClient;
 use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
 use std::collections::BTreeSet;
-use std::collections::Bound::{Included, Unbounded};
 use std::io::prelude::*;
 use std::net::IpAddr;
+use std::ops::Bound::{Included, Unbounded};
 use std::str::FromStr;
 
 #[derive(Debug)]
