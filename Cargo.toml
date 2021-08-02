@@ -20,7 +20,7 @@ log = "0.4"
 router = "0.6"
 serde_json = "1.0"
 unicase = "1"
-time = "0.1"
+time = "0.3"
 
 [features]
 default = []
