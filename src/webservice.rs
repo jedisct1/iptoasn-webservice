@@ -7,7 +7,7 @@ use iron::prelude::*;
 use iron::status;
 use iron::{typemap, BeforeMiddleware};
 use router::Router;
-use serde_json;
+
 use std::net::IpAddr;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
