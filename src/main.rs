@@ -38,8 +38,8 @@ fn update_asns(asns_arc: &Arc<RwLock<Arc<ASNs>>>, db_url: &str) {
 fn main() {
     let matches = app_from_crate!()
         .arg(
-            Arg::with_name("listen_addr")
-                .short("l")
+            Arg::new("listen_addr")
+                .short('l')
                 .long("listen")
                 .value_name("ip:port")
                 .help("Webservice IP and port")
@@ -47,8 +47,8 @@ fn main() {
                 .default_value("0.0.0.0:53661"),
         )
         .arg(
-            Arg::with_name("db_url")
-                .short("u")
+            Arg::new("db_url")
+                .short('u')
                 .long("dburl")
                 .value_name("url")
                 .help("URL of the gzipped database")
