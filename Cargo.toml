@@ -10,7 +10,7 @@ authors = ["Frank Denis <github@pureftpd.org>"]
 edition = "2018"
 
 [dependencies]
-clap = { version = "3.0.0", features = ["std", "cargo", "wrap_help"] }
+clap = { version = "4.0.14", features = ["std", "cargo", "wrap_help"] }
 flate2 = "1"
 horrorshow = "0.8"
 hyper = "0.10"
