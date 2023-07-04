@@ -10,18 +10,16 @@ authors = ["Frank Denis <github@pureftpd.org>"]
 edition = "2018"
 
 [dependencies]
-clap = { version = "3.0.0", features = ["std", "cargo", "wrap_help"] }
-flate2 = "1"
+clap = { version = "4.3.10", features = ["std", "cargo", "wrap_help"] }
+flate2 = {version = "1"}
+reqwest = { version = "0.11.18", features = ["blocking", "gzip","native-tls"] }
 horrorshow = "0.8"
-hyper = "0.10"
-hyper-native-tls = "0.3"
-iron = "0.6"
+tokio = { version = "1.29.1" }
+actix-web = "4"
 log = "0.4"
-router = "0.6"
+env_logger = "0.10.0"
 serde_json = "1.0"
-unicase = "1"
-time = "0.1"
-
+mime = "0.3.17"
 [features]
 default = []
 
