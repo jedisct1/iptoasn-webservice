@@ -13,7 +13,7 @@ edition = "2018"
 clap = { version = "3.0.0", features = ["std", "cargo", "wrap_help"] }
 flate2 = "1"
 horrorshow = "0.8"
-hyper = "0.10"
+hyper = "1.2"
 hyper-native-tls = "0.3"
 iron = "0.6"
 log = "0.4"
