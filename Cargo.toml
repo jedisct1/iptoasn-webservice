@@ -19,7 +19,7 @@ iron = "0.6"
 log = "0.4"
 router = "0.6"
 serde_json = "1.0"
-unicase = "1"
+unicase = "2"
 time = "0.1"
 
 [features]
