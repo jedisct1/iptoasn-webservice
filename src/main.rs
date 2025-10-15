@@ -1,3 +1,10 @@
+#[cfg(not(target_env = "msvc"))]
+use tikv_jemallocator::Jemalloc;
+
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
+
 #[macro_use]
 extern crate horrorshow;
 #[macro_use]
@@ -9,6 +16,11 @@ mod webservice;
 use crate::asns::Asns;
 use crate::webservice::WebService;
 use clap::{Arg, Command};
+use http_body_util::Empty;
+use hyper::body::Bytes;
+use hyper_rustls::HttpsConnectorBuilder;
+use hyper_util::client::legacy::Client;
+use hyper_util::rt::TokioExecutor;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
@@ -58,11 +70,23 @@ async fn main() {
         }
     };
 
-    let asns = match get_asns(db_url).await {
+    let http_client = if db_url.starts_with("http://") || db_url.starts_with("https://") {
+        let https = HttpsConnectorBuilder::new()
+            .with_native_roots()
+            .expect("Failed to load native roots")
+            .https_or_http()
+            .enable_http1()
+            .enable_http2()
+            .build();
+        Some(Client::builder(TokioExecutor::new()).build::<_, Empty<Bytes>>(https))
+    } else {
+        None
+    };
+
+    let asns = match get_asns(db_url, http_client.as_ref()).await {
         Ok(asns) => asns,
         Err(e) => {
             error!("Failed to load initial database: {e}");
-            error!("Application cannot start without initial data");
             return;
         }
     };
@@ -72,10 +96,11 @@ async fn main() {
     if refresh_delay > 0 {
         let asns_arc_t = asns_arc.clone();
         let db_url_t = db_url.clone();
+        let http_client_t = http_client.clone();
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(refresh_delay * 60)).await;
-                update_asns(&asns_arc_t, &db_url_t).await;
+                update_asns(&asns_arc_t, &db_url_t, http_client_t.as_ref()).await;
             }
         });
         info!(
@@ -89,25 +114,50 @@ async fn main() {
     WebService::start(asns_arc, listen_addr).await;
 }
 
-async fn get_asns(db_url: &str) -> Result<Asns, &'static str> {
+async fn get_asns(
+    db_url: &str,
+    http_client: Option<
+        &Client<
+            hyper_rustls::HttpsConnector<hyper_util::client::legacy::connect::HttpConnector>,
+            Empty<Bytes>,
+        >,
+    >,
+) -> Result<Asns, &'static str> {
     info!("Retrieving ASNs");
-    let asns = Asns::new(db_url).await?;
+    let asns = Asns::new(db_url, http_client).await?;
     info!("ASNs loaded");
     Ok(asns)
 }
 
-async fn update_asns(asns_arc: &Arc<RwLock<Arc<Asns>>>, db_url: &str) {
-    info!("Attempting to update ASN database");
-    let asns = match get_asns(db_url).await {
-        Ok(asns) => asns,
+async fn update_asns(
+    asns_arc: &Arc<RwLock<Arc<Asns>>>,
+    db_url: &str,
+    http_client: Option<
+        &Client<
+            hyper_rustls::HttpsConnector<hyper_util::client::legacy::connect::HttpConnector>,
+            Empty<Bytes>,
+        >,
+    >,
+) {
+    {
+        let empty_asns = Arc::new(Asns {
+            asns: std::collections::BTreeSet::new(),
+        });
+        let mut guard = asns_arc.write().unwrap();
+        let old = std::mem::replace(&mut *guard, empty_asns);
+        drop(guard);
+        drop(old);
+    }
+
+    let new_asns = match get_asns(db_url, http_client).await {
+        Ok(asns) => Arc::new(asns),
         Err(e) => {
             warn!("Failed to update ASN database: {e}");
             warn!("Continuing with existing data");
             return;
         }
     };
-    let asns_arc_new = Arc::new(asns);
-    let mut asns_arc_w = asns_arc.write().unwrap();
-    *asns_arc_w = asns_arc_new;
+
+    *asns_arc.write().unwrap() = new_asns;
     info!("ASN database successfully updated");
 }

@@ -8,7 +8,7 @@ use hyper_util::client::legacy::Client;
 use hyper_util::rt::TokioExecutor;
 use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
 use std::collections::BTreeSet;
-use std::io::prelude::*;
+use std::io::{prelude::*, BufReader};
 use std::net::IpAddr;
 use std::ops::Bound::{Included, Unbounded};
 use std::str::FromStr;
@@ -55,13 +55,19 @@ impl Asn {
 }
 
 pub struct Asns {
-    asns: BTreeSet<Asn>,
+    pub asns: BTreeSet<Asn>, // Make it public
 }
 
 impl Asns {
-    pub async fn new(url: &str) -> Result<Self, &'static str> {
-        info!("Loading the database from {}", url);
-
+    pub async fn new(
+        url: &str,
+        http_client: Option<
+            &Client<
+                hyper_rustls::HttpsConnector<hyper_util::client::legacy::connect::HttpConnector>,
+                Empty<Bytes>,
+            >,
+        >,
+    ) -> Result<Self, &'static str> {
         let bytes = if url.starts_with("file://") {
             // Handle local file URL
             let path = url.trim_start_matches("file://");
@@ -77,17 +83,21 @@ impl Asns {
             // Handle HTTP or HTTPS URL
             info!("Loading the database from {}", url);
 
-            // Create an HTTPS connector with TLS 1.3 support
-            let https = HttpsConnectorBuilder::new()
-                .with_native_roots()
-                .expect("Failed to load native roots")
-                .https_or_http()
-                .enable_http1()
-                .enable_http2() // Enable HTTP/2 for better performance
-                .build();
+            let client = match http_client {
+                Some(c) => c,
+                None => {
+                    let https = HttpsConnectorBuilder::new()
+                        .with_native_roots()
+                        .expect("Failed to load native roots")
+                        .https_or_http()
+                        .enable_http1()
+                        .enable_http2()
+                        .build();
 
-            // Create a client with the HTTPS connector
-            let client = Client::builder(TokioExecutor::new()).build::<_, Empty<Bytes>>(https);
+                    // This creates a temporary client - not ideal but maintains backward compatibility
+                    &Client::builder(TokioExecutor::new()).build::<_, Empty<Bytes>>(https)
+                }
+            };
 
             // Create the request
             let req = Request::builder()
@@ -194,43 +204,63 @@ impl Asns {
     }
 
     fn parse_data(bytes: Bytes) -> Result<Self, &'static str> {
-        let mut data = String::new();
-        if GzDecoder::new(bytes.as_ref())
-            .read_to_string(&mut data)
-            .is_err()
-        {
-            error!("Unable to decompress the database");
-            return Err("Unable to decompress the database");
-        }
+        // Use BufReader to stream line-by-line instead of reading entire file into String
+        let decoder = GzDecoder::new(bytes.as_ref());
+        let reader = BufReader::new(decoder);
+
         let mut asns = BTreeSet::new();
-        for line in data.split_terminator('\n') {
+        let mut line_count = 0;
+        let mut error_count = 0;
+
+        for line_result in reader.lines() {
+            let line = match line_result {
+                Ok(l) => l,
+                Err(e) => {
+                    error!("Error reading line: {}", e);
+                    return Err("Unable to decompress the database");
+                }
+            };
+
             if line.trim().is_empty() {
                 continue;
             }
+
+            line_count += 1;
+
             let mut parts = line.split('\t');
             let first_ip = match parts.next().and_then(|s| IpAddr::from_str(s).ok()) {
                 Some(ip) => ip,
                 None => {
-                    warn!("Invalid IP address in line: {}", line);
+                    error_count += 1;
+                    if error_count <= 10 {
+                        warn!("Invalid first IP address in line {}: {}", line_count, line);
+                    }
                     continue;
                 }
             };
             let last_ip = match parts.next().and_then(|s| IpAddr::from_str(s).ok()) {
                 Some(ip) => ip,
                 None => {
-                    warn!("Invalid IP address in line: {}", line);
+                    error_count += 1;
+                    if error_count <= 10 {
+                        warn!("Invalid last IP address in line {}: {}", line_count, line);
+                    }
                     continue;
                 }
             };
             let number = match parts.next().and_then(|s| u32::from_str(s).ok()) {
                 Some(num) => num,
                 None => {
-                    warn!("Invalid ASN number in line: {}", line);
+                    error_count += 1;
+                    if error_count <= 10 {
+                        warn!("Invalid ASN number in line {}: {}", line_count, line);
+                    }
                     continue;
                 }
             };
             let country = parts.next().unwrap_or("").to_owned();
             let description = parts.next().unwrap_or("").to_owned();
+
             let asn = Asn {
                 first_ip,
                 last_ip,
@@ -240,7 +270,19 @@ impl Asns {
             };
             asns.insert(asn);
         }
-        info!("Database loaded with {} entries", asns.len());
+
+        if error_count > 10 {
+            warn!(
+                "Total of {} malformed lines encountered (showing first 10)",
+                error_count
+            );
+        }
+
+        info!(
+            "Database loaded with {} entries from {} lines",
+            asns.len(),
+            line_count
+        );
         Ok(Self { asns })
     }
 
