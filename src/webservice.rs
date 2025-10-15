@@ -272,6 +272,7 @@ impl WebService {
             }
         };
 
+        log::info!("Listening on {}", addr);
         log::info!("webservice ready");
 
         loop {

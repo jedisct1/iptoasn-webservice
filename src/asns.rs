@@ -55,7 +55,7 @@ impl Asn {
 }
 
 pub struct Asns {
-    pub asns: BTreeSet<Asn>, // Make it public
+    pub asns: BTreeSet<Asn>,
 }
 
 impl Asns {
@@ -93,8 +93,6 @@ impl Asns {
                         .enable_http1()
                         .enable_http2()
                         .build();
-
-                    // This creates a temporary client - not ideal but maintains backward compatibility
                     &Client::builder(TokioExecutor::new()).build::<_, Empty<Bytes>>(https)
                 }
             };
@@ -204,7 +202,7 @@ impl Asns {
     }
 
     fn parse_data(bytes: Bytes) -> Result<Self, &'static str> {
-        // Use BufReader to stream line-by-line instead of reading entire file into String
+        // Use BufReader to stream line-by-line
         let decoder = GzDecoder::new(bytes.as_ref());
         let reader = BufReader::new(decoder);
 
