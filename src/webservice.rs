@@ -231,11 +231,13 @@ impl WebService {
             Ok(ip) => ip,
         };
 
-        let asns = asns_arc.read().unwrap().clone();
+        let response = {
+            let asns_guard = asns_arc.read().unwrap();
 
-        let found = match asns.lookup_by_ip(ip) {
-            None => {
-                let response = IpLookupResponse {
+            let found = asns_guard.lookup_by_ip(ip);
+
+            match found {
+                None => IpLookupResponse {
                     ip: ip.to_string(),
                     announced: false,
                     first_ip: None,
@@ -243,20 +245,18 @@ impl WebService {
                     as_number: None,
                     as_country_code: None,
                     as_description: None,
-                };
-                return Ok(Self::output(&Self::accept_type(headers), &response));
+                },
+                Some(found) => IpLookupResponse {
+                    ip: ip.to_string(),
+                    announced: true,
+                    first_ip: Some(found.first_ip.to_string()),
+                    last_ip: Some(found.last_ip.to_string()),
+                    as_number: Some(found.number),
+                    as_country_code: Some(found.country.clone()),
+                    as_description: Some(found.description.clone()),
+                },
             }
-            Some(found) => found,
-        };
-
-        let response = IpLookupResponse {
-            ip: ip.to_string(),
-            announced: true,
-            first_ip: Some(found.first_ip.to_string()),
-            last_ip: Some(found.last_ip.to_string()),
-            as_number: Some(found.number),
-            as_country_code: Some(found.country.clone()),
-            as_description: Some(found.description.clone()),
+            // asns_guard (and read lock) dropped here
         };
 
         Ok(Self::output(&Self::accept_type(headers), &response))
