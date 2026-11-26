@@ -6,7 +6,7 @@ WORKDIR /tmp/iptoasn
 COPY Cargo.* ./
 COPY src ./src
 
-RUN cargo build --release --locked \
+RUN cargo build --release \
   && strip target/release/iptoasn-webservice
 
 FROM alpine:3.23
